@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c447c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="L3 Parking" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>L3 Parking — Plate Registration</title>
+  <style>
+    :root {
+      --bg: #f6f5f1;
+      --surface: #ffffff;
+      --surface-2: #f1efe8;
+      --text: #1a1a1a;
+      --text-2: #5f5e5a;
+      --text-3: #888780;
+      --border: #d3d1c7;
+      --border-soft: #e8e6df;
+      --primary: #185fa5;
+      --primary-bg: #e6f1fb;
+      --primary-border: #b5d4f4;
+      --success: #27500a;
+      --success-bg: #eaf3de;
+      --success-border: #c0dd97;
+      --danger: #791f1f;
+      --danger-bg: #fcebeb;
+      --danger-border: #f7c1c1;
+      --warning: #854f0b;
+      --warning-bg: #faeeda;
+      --warning-border: #fac775;
+      --transfer: #3c3489;
+      --transfer-bg: #eeedfe;
+      --transfer-border: #afa9ec;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    button { touch-action: manipulation; }
+    button:active { transform: scale(0.97); transition: transform 0.06s ease; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--surface);
+      padding-bottom: 96px;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px 6px;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 10;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    header .brand small {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 0.5px;
+      font-weight: 500;
+      display: block;
+    }
+    header .brand h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 2px 0 0;
+    }
+    header .header-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .icon-btn {
+      background: var(--surface-2);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+    }
+    .icon-btn:active { transform: scale(0.95); }
+    .admin-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--warning-bg);
+      color: var(--warning);
+      font-weight: 600;
+      display: none;
+    }
+    body.admin-mode .admin-badge { display: inline-flex; }
+    body.admin-mode header { border-bottom-color: var(--warning-border); }
+    .partner-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--primary-bg);
+      color: var(--primary);
+      font-weight: 600;
+      display: none;
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .partner-badge:active { transform: scale(0.95); }
+    body.partner-mode .partner-badge { display: inline-flex; }
+
+    /* ---------- Search ---------- */
+    .search-wrap { padding: 10px 16px 8px; }
+    .search-input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 16px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+
+    /* ---------- Filter chips ---------- */
+    .filters {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px 10px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .chip.active { background: var(--text); color: var(--surface); }
+    .chip.pending { background: var(--warning-bg); color: var(--warning); }
+    .chip.pending.active { background: var(--warning); color: #fff; }
+    .chip.transfer { background: var(--transfer-bg); color: var(--transfer); }
+    .chip.transfer.active { background: var(--transfer); color: #fff; }
+    .chip.new { background: var(--primary-bg); color: var(--primary); }
+    .chip.new.active { background: var(--primary); color: #fff; }
+    .chip.added { background: var(--success-bg); color: var(--success); }
+    .chip.added.active { background: var(--success); color: #fff; }
+    .chip.removed { background: var(--danger-bg); color: var(--danger); }
+    .chip.removed.active { background: var(--danger); color: #fff; }
+    .chip.my-profile { background: var(--primary-bg); color: var(--primary); display: inline-flex; align-items: center; gap: 4px; }
+    .chip.my-profile:active { transform: scale(0.96); }
+    .partner-tab {
+      flex: 1; font-size: 12px; padding: 9px 4px;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-2); font-weight: 500; cursor: pointer;
+    }
+    .partner-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .partner-row-status {
+      font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+      display: inline-block; margin-left: 6px; vertical-align: middle;
+    }
+    .partner-row-status.pending { background: var(--warning-bg); color: var(--warning); }
+    .partner-row-status.approved { background: var(--success-bg); color: var(--success); }
+    .partner-row-status.deactivated { background: var(--surface-2); color: var(--text-2); }
+    .dash-tab {
+      flex: 1; font-size: 13px; padding: 11px 6px;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-2); font-weight: 600; cursor: pointer;
+    }
+    .dash-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .dash-panel.hidden { display: none; }
+    .branch-card {
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .branch-card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+    .branch-card .stats { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .branch-card .stat { font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
+    .branch-card .stat.pending { background: var(--warning-bg); color: var(--warning); }
+    .branch-card .stat.new { background: var(--primary-bg); color: var(--primary); }
+    .branch-card .stat.added { background: var(--success-bg); color: var(--success); }
+    .branch-card .stat.removed { background: var(--danger-bg); color: var(--danger); }
+    .branch-card .ops { display: flex; gap: 6px; flex-wrap: wrap; }
+    .branch-card .ops button {
+      font-size: 12px; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); cursor: pointer; font-weight: 500;
+    }
+    .branch-card .ops button.primary {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+
+    /* ---------- Branch tabs ---------- */
+    .branch-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px 16px 8px;
+      background: var(--surface);
+      position: sticky;
+      top: 58px;
+      z-index: 9;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .branch-tab {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text-2);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .branch-tab.active { background: var(--primary); color: #fff; }
+
+    /* ---------- Sort + partner filter row ---------- */
+    .sort-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 10px;
+    }
+    .sort-row select {
+      flex: 1;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      padding: 0 10px;
+      font-family: inherit;
+      outline: none;
+    }
+    .sort-row select:focus { border-color: var(--primary); }
+
+    /* ---------- Admin bulk action bar ---------- */
+    .bulk-bar {
+      margin: 0 16px 10px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    body.admin-mode .bulk-bar.has-selection,
+    body.partner-mode .bulk-bar.has-selection { display: flex; }
+    .bulk-bar .count { font-size: 13px; font-weight: 600; color: var(--text); }
+    .bulk-bar .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .bulk-bar button {
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+    }
+    .bulk-bar button:disabled { background: var(--surface); color: var(--text-3); cursor: not-allowed; border: 1px solid var(--border-soft); }
+    .btn-approve { background: var(--success); }
+    .btn-removed { background: var(--danger); }
+    .btn-reject { background: var(--text-2); }
+
+    /* ---------- Plate list ---------- */
+    .plate-list { padding: 0 16px; }
+    .plate-card {
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border: 1px solid;
+    }
+    .plate-card.pending { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning); }
+    .plate-card.new { background: var(--primary-bg); border-color: var(--primary-border); color: var(--primary); }
+    .plate-card.added { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+    .plate-card.removed { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
+    .plate-card.transfer { background: var(--transfer-bg); border-color: var(--transfer-border); color: var(--transfer); }
+    .plate-card .check {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1.5px solid currentColor;
+      flex: 0 0 auto;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      margin-top: 2px;
+    }
+    body.admin-mode .plate-card .check { display: inline-flex; }
+    body.partner-mode .plate-card.own .check { display: inline-flex; }
+    body.partner-mode:not(.admin-mode) .bulk-bar .btn-approve,
+    body.partner-mode:not(.admin-mode) .bulk-bar .btn-reject { display: none; }
+    .plate-card .check.checked::after {
+      content: "";
+      width: 12px;
+      height: 7px;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(-45deg) translate(2px, -1px);
+    }
+    .plate-card .body { flex: 1; min-width: 0; }
+    .plate-card .row1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .plate-number {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .plate-card.removed .plate-number { text-decoration: line-through; }
+    .status-pill {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .plate-meta {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 3px;
+    }
+
+    /* ---------- Empty / loading ---------- */
+    .empty {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--text-3);
+      font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    /* ---------- Bottom bar ---------- */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+      background: var(--surface);
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+    .bottom-bar .secondary { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+    .bottom-bar .secondary button {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .bottom-bar .secondary button.admin-only { display: none; }
+    body.admin-mode .bottom-bar .secondary button.admin-only { display: inline-flex; }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .submit-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+    }
+    .btn-bulk-sub {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 16px 16px 12px 12px;
+      width: 100%;
+      max-width: 460px;
+      padding: 18px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.18s ease-out;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal h2 { font-size: 16px; font-weight: 600; margin: 0 0 14px; display: flex; justify-content: space-between; align-items: center; }
+    .modal h2 .close-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-2); line-height: 1; padding: 4px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+    .form-group .static-display {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .modal-actions button:disabled { opacity: 0.55; cursor: wait; }
+    .top-progress {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-bg));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease-out;
+      z-index: 200;
+    }
+    .top-progress.active { transform: scaleX(0.7); animation: progressPulse 1.4s ease-in-out infinite; }
+    @keyframes progressPulse {
+      0% { transform: scaleX(0.1); }
+      50% { transform: scaleX(0.9); }
+      100% { transform: scaleX(0.1); }
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-bg);
+    }
+    .form-group input.plate-input {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .form-group textarea { min-height: 140px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; }
+    .pin-input { font-size: 24px; letter-spacing: 8px; text-align: center; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .modal-actions button {
+      flex: 1;
+      padding: 11px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .modal-actions .btn-cancel { background: var(--surface-2); color: var(--text); }
+    .modal-actions .btn-confirm { background: var(--primary); color: #fff; flex: 1.5; }
+    .modal-actions .btn-confirm.danger { background: var(--danger); }
+    .modal-actions .btn-confirm.success { background: var(--success); }
+    .bulk-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 6px 2px;
+    }
+    .bulk-summary .new-count { color: var(--success); font-weight: 600; }
+    .bulk-summary .dup-count { color: var(--warning); font-weight: 600; }
+    .bulk-summary .total { color: var(--text-3); }
+
+    /* ---------- Toast ---------- */
+    .toast-container {
+      position: fixed;
+      bottom: 100px;
+      left: 16px;
+      right: 16px;
+      max-width: 448px;
+      margin: 0 auto;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--text);
+      color: var(--surface);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation: toastIn 0.2s ease-out;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ---------- Misc ---------- */
+    .hidden { display: none !important; }
+    .footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-3);
+      padding: 16px;
+    }
+    .sync-status {
+      font-size: 11px;
+      color: var(--text-3);
+      text-align: center;
+      padding: 4px 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-progress" id="topProgress"></div>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <small>CARNET</small>
+        <h1>L3 Parking</h1>
+      </div>
+      <div class="header-actions">
+        <span class="partner-badge" id="partnerBadge"></span>
+        <span class="admin-badge" id="adminBadge">ADMIN</span>
+        <button class="icon-btn" id="refreshBtn" title="Refresh" aria-label="Refresh">↻</button>
+        <button class="icon-btn" id="partnerToggleBtn" title="Partner sign in" aria-label="Partner sign in">👤</button>
+        <button class="icon-btn" id="adminToggleBtn" title="Admin mode" aria-label="Admin mode">🔒</button>
+      </div>
+    </header>
+
+    <div class="branch-tabs" id="branchTabs"></div>
+
+    <div class="search-wrap">
+      <input type="search" class="search-input" id="searchInput" placeholder="Search plate, status, remark..." autocomplete="off" />
+    </div>
+
+    <div class="filters" id="filterTabs"></div>
+
+    <div class="sort-row">
+      <select id="sortSelect" aria-label="Sort">
+        <option value="latest" selected>Sort: latest first</option>
+        <option value="oldest">Sort: oldest first</option>
+        <option value="status">Sort: by status</option>
+      </select>
+      <select id="partnerFilterSelect" aria-label="Filter by partner">
+        <option value="">All partners</option>
+      </select>
+    </div>
+
+    <div class="bulk-bar" id="bulkBar">
+      <span class="count" id="bulkCount">0 selected</span>
+      <div class="actions">
+        <button class="btn-approve" id="approveBtn">Approve</button>
+        <button class="btn-removed" id="bulkRemoveBtn">Mark Removed</button>
+        <button class="btn-reject" id="rejectBtn">Reject</button>
+        <button id="adminMoveBtn" style="background:var(--primary);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;display:none;">Move branch</button>
+        <button id="partnerTransferBtn" style="background:var(--transfer);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;display:none;">Request transfer</button>
+        <button id="partnerCancelTransferBtn" style="background:var(--text-2);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;display:none;">Cancel transfer</button>
+      </div>
+    </div>
+
+    <div class="plate-list" id="plateList">
+      <div class="loading">Loading plates...</div>
+    </div>
+
+    <div class="sync-status" id="syncStatus"></div>
+    <div class="footer-note">L3 Parking · CARNET · <span id="appVersion">v11.0</span></div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="secondary">
+      <button id="cutoffBtn" class="admin-only">Copy New</button>
+      <button id="exportBtn" class="admin-only">CSV</button>
+      <button id="adminDashboardBtn" class="admin-only" style="background:var(--primary-bg);color:var(--primary);border-color:var(--primary-border);">Dashboard</button>
+    </div>
+    <div class="submit-stack">
+      <button class="btn-primary" id="submitBtn">+ Submit plate</button>
+      <button id="bulkSubmitBtn" class="btn-bulk-sub">Bulk submit</button>
+    </div>
+  </div>
+
+  <!-- ===== Submit plate modal (partner) ===== -->
+  <div class="modal-overlay" id="submitModal">
+    <div class="modal">
+      <h2>Submit plate <button class="close-btn" data-close="submitModal">×</button></h2>
+      <div class="form-group">
+        <label for="submitPartner">Your name</label>
+        <select id="submitPartner"><option value="">Pick your name...</option></select>
+      </div>
+      <div class="form-group">
+        <label for="submitPlate">Plate number</label>
+        <input type="text" id="submitPlate" class="plate-input" placeholder="WTB 8842" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="submitBranch">Branch <span style="color:var(--danger);font-weight:400;">*</span></label>
+        <select id="submitBranch"><option value="">Pick branch...</option></select>
+      </div>
+      <div class="form-group">
+        <label for="submitCarModel">Car model <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+        <input type="text" id="submitCarModel" placeholder="Honda Civic, Perodua Myvi..." autocomplete="off" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="submitModal">Cancel</button>
+        <button class="btn-confirm" id="submitConfirmBtn">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Bulk submit modal (partner) ===== -->
+  <div class="modal-overlay" id="bulkSubmitModal">
+    <div class="modal">
+      <h2>Bulk submit <button class="close-btn" data-close="bulkSubmitModal">×</button></h2>
+      <div class="form-group">
+        <label for="bulkSubmitPartner">Your name</label>
+        <select id="bulkSubmitPartner"><option value="">Pick your name...</option></select>
+      </div>
+      <div class="form-group">
+        <label for="bulkSubmitBranch">Branch <span style="color:var(--danger);font-weight:400;">*</span></label>
+        <select id="bulkSubmitBranch"><option value="">Pick branch...</option></select>
+      </div>
+      <div class="form-group">
+        <label for="bulkSubmitPlates">Plates &amp; models, one per line<br><span style="font-size:11px;color:var(--text-3);font-weight:400;">Format: PLATE, MODEL (model is optional)</span></label>
+        <textarea id="bulkSubmitPlates" placeholder="WTB 8842, Honda Civic&#10;VBA 3401, Perodua Myvi&#10;JLM 5567"></textarea>
+        <div class="bulk-summary">
+          <span><span class="new-count" id="bulkNewCount">0 new</span> · <span class="dup-count" id="bulkDupCount">0 duplicate</span></span>
+          <span class="total" id="bulkTotalCount">0 lines</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="bulkSubmitModal">Cancel</button>
+        <button class="btn-confirm" id="bulkSubmitConfirmBtn">Submit all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Partner sign-in modal ===== -->
+  <div class="modal-overlay" id="partnerLoginModal">
+    <div class="modal">
+      <h2>Partner sign in <button class="close-btn" data-close="partnerLoginModal">×</button></h2>
+      <div class="form-group">
+        <label for="partnerLoginId">ID</label>
+        <input type="text" id="partnerLoginId" placeholder="your ID" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="partnerLoginPin">Password</label>
+        <input type="password" id="partnerLoginPin" autocomplete="current-password" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="partnerLoginModal">Cancel</button>
+        <button class="btn-confirm" id="partnerLoginConfirmBtn">Sign in</button>
+      </div>
+      <p style="text-align:center;font-size:12px;color:var(--text-2);margin:14px 0 0;">
+        Not registered yet? <a href="#" id="openSignUpLink" style="color:var(--primary);font-weight:500;">Sign up here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== Change password modal ===== -->
+  <div class="modal-overlay" id="changePinModal">
+    <div class="modal">
+      <h2>Change password <button class="close-btn" data-close="changePinModal">×</button></h2>
+      <div class="form-group">
+        <label for="currentPinInput">Current password</label>
+        <input type="password" id="currentPinInput" autocomplete="current-password" />
+      </div>
+      <div class="form-group">
+        <label for="newPinInput">New password (4–16 chars)</label>
+        <input type="password" id="newPinInput" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label for="confirmPinInput">Confirm new password</label>
+        <input type="password" id="confirmPinInput" autocomplete="new-password" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="changePinModal">Cancel</button>
+        <button class="btn-confirm" id="changePinConfirmBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Edit profile modal ===== -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal">
+      <h2>Edit profile <button class="close-btn" data-close="editProfileModal">×</button></h2>
+      <div class="form-group">
+        <label>ID</label>
+        <div class="static-display" id="editProfileId" style="font-size:16px;font-weight:500;letter-spacing:normal;">—</div>
+      </div>
+      <div class="form-group">
+        <label for="editProfileName">Display name</label>
+        <input type="text" id="editProfileName" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label for="editProfileCompany">Company</label>
+        <input type="text" id="editProfileCompany" placeholder="Your company" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="editProfileModal">Cancel</button>
+        <button class="btn-confirm" id="editProfileSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Partner profile modal ===== -->
+  <div class="modal-overlay" id="partnerProfileModal">
+    <div class="modal">
+      <h2>My profile <button class="close-btn" data-close="partnerProfileModal">×</button></h2>
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--primary-bg);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;margin-bottom:10px;" id="profileAvatar">?</div>
+        <div style="font-size:18px;font-weight:600;" id="profileName">—</div>
+        <div style="font-size:13px;color:var(--text-2);margin-top:2px;" id="profileCompany">—</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;">
+        <div style="background:var(--warning-bg);padding:10px 4px;border-radius:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:600;color:var(--warning);" id="profileStatPending">0</div>
+          <div style="font-size:10px;color:var(--warning);font-weight:600;letter-spacing:0.3px;">PENDING</div>
+        </div>
+        <div style="background:var(--primary-bg);padding:10px 4px;border-radius:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:600;color:var(--primary);" id="profileStatNew">0</div>
+          <div style="font-size:10px;color:var(--primary);font-weight:600;letter-spacing:0.3px;">NEW</div>
+        </div>
+        <div style="background:var(--success-bg);padding:10px 4px;border-radius:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:600;color:var(--success);" id="profileStatAdded">0</div>
+          <div style="font-size:10px;color:var(--success);font-weight:600;letter-spacing:0.3px;">ADDED</div>
+        </div>
+        <div style="background:var(--danger-bg);padding:10px 4px;border-radius:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:600;color:var(--danger);" id="profileStatRemoved">0</div>
+          <div style="font-size:10px;color:var(--danger);font-weight:600;letter-spacing:0.3px;">REMOVED</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:13px;color:var(--text-2);margin-bottom:14px;">
+        Total: <b id="profileStatTotal">0</b> plate(s) submitted
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+        <button class="btn-cancel" id="profileEditBtn" style="font-size:14px;padding:11px;border-radius:10px;border:none;background:var(--surface-2);color:var(--text);font-weight:500;cursor:pointer;">Edit name &amp; company</button>
+        <button class="btn-cancel" id="profileChangePinBtn" style="font-size:14px;padding:11px;border-radius:10px;border:none;background:var(--surface-2);color:var(--text);font-weight:500;cursor:pointer;">Change password</button>
+        <button class="btn-confirm danger" id="profileSignOutBtn" style="background:var(--danger);color:#fff;border:none;padding:11px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Partner sign-up modal ===== -->
+  <div class="modal-overlay" id="partnerSignUpModal">
+    <div class="modal">
+      <h2>Sign up as partner <button class="close-btn" data-close="partnerSignUpModal">×</button></h2>
+      <p style="font-size:12px;color:var(--text-2);line-height:1.5;margin:0 0 14px;">
+        After you sign up, admin will review and approve. Once approved, sign in with your ID + password.
+      </p>
+      <div class="form-group">
+        <label for="signUpId">ID (used to sign in)</label>
+        <input type="text" id="signUpId" placeholder="e.g. ahmad01" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="signUpName">Display name (shown on plates)</label>
+        <input type="text" id="signUpName" placeholder="e.g. Ahmad Faiz" autocomplete="name" />
+      </div>
+      <div class="form-group">
+        <label for="signUpCompany">Company</label>
+        <input type="text" id="signUpCompany" placeholder="e.g. Auto Bay Sdn Bhd" autocomplete="organization" />
+      </div>
+      <div class="form-group">
+        <label for="signUpPin">Choose a password (4–16 chars)</label>
+        <input type="password" id="signUpPin" autocomplete="new-password" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="partnerSignUpModal">Cancel</button>
+        <button class="btn-confirm" id="signUpConfirmBtn">Submit application</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Admin Dashboard ===== -->
+  <div class="modal-overlay" id="adminDashboardModal">
+    <div class="modal" style="max-width:560px;max-height:95vh;width:100%;padding:14px;">
+      <h2 style="margin-bottom:10px;">Admin dashboard <button class="close-btn" data-close="adminDashboardModal">×</button></h2>
+      <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);">
+        <button class="dash-tab active" data-dashtab="pendings">Pendings</button>
+        <button class="dash-tab" data-dashtab="partners">Partners</button>
+        <button class="dash-tab" data-dashtab="operations">Operations</button>
+      </div>
+
+      <!-- Tab: Pendings (cross-branch) -->
+      <div id="dashPendings" class="dash-panel">
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:10px;">All Pending plates across every branch. Approve here to send to operator at the right branch.</div>
+        <div id="dashPendingsList"></div>
+      </div>
+
+      <!-- Tab: Partners -->
+      <div id="dashPartners" class="dash-panel hidden">
+        <div style="display:flex;gap:4px;margin-bottom:10px;">
+          <button class="partner-tab active" data-tab="all" data-dash="1">All</button>
+          <button class="partner-tab" data-tab="Pending" data-dash="1">Pending</button>
+          <button class="partner-tab" data-tab="Approved" data-dash="1">Approved</button>
+          <button class="partner-tab" data-tab="Deactivated" data-dash="1">Deactivated</button>
+        </div>
+        <div id="dashPartnersList" style="max-height:55vh;overflow-y:auto;"></div>
+      </div>
+
+      <!-- Tab: Operations -->
+      <div id="dashOperations" class="dash-panel hidden">
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:14px;">Quick actions per branch.</div>
+        <div id="dashOperationsList"></div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:14px;">
+        <button class="btn-cancel" data-close="adminDashboardModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Manage partners (admin) ===== -->
+  <div class="modal-overlay" id="pendingPartnersModal">
+    <div class="modal">
+      <h2>Manage partners <button class="close-btn" data-close="pendingPartnersModal">×</button></h2>
+      <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--border-soft);">
+        <button class="partner-tab active" data-tab="all">All</button>
+        <button class="partner-tab" data-tab="Pending">Pending</button>
+        <button class="partner-tab" data-tab="Approved">Approved</button>
+        <button class="partner-tab" data-tab="Deactivated">Deactivated</button>
+      </div>
+      <div id="pendingPartnersList" style="font-size:14px;max-height:60vh;overflow-y:auto;"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="pendingPartnersModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PIN modal (admin gate) ===== -->
+  <div class="modal-overlay" id="pinModal">
+    <div class="modal">
+      <h2>Admin access <button class="close-btn" data-close="pinModal">×</button></h2>
+      <div class="form-group">
+        <label for="pinInput">Enter PIN</label>
+        <input type="password" id="pinInput" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="pinModal">Cancel</button>
+        <button class="btn-confirm" id="pinConfirmBtn">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Edit plate modal (admin) ===== -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>Edit plate <button class="close-btn" data-close="editModal">×</button></h2>
+      <div class="form-group">
+        <label>Plate number</label>
+        <div id="editPlate" class="static-display"></div>
+      </div>
+      <div class="form-group">
+        <label for="editStatus">Status</label>
+        <select id="editStatus">
+          <option value="Pending">Pending</option>
+          <option value="Transfer">Transfer</option>
+          <option value="New">New</option>
+          <option value="Added">Added</option>
+          <option value="Removed">Removed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editBranch">Branch</label>
+        <select id="editBranch"></select>
+      </div>
+      <div class="form-group">
+        <label for="editCarModel">Car model</label>
+        <input type="text" id="editCarModel" placeholder="(optional)" />
+      </div>
+      <div class="form-group">
+        <label for="editRemarks">Remarks</label>
+        <input type="text" id="editRemarks" placeholder="(optional)" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="editModal">Cancel</button>
+        <button class="btn-confirm danger" id="editRemoveBtn">Mark Removed</button>
+        <button class="btn-confirm" id="editSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Cutoff modal (admin) ===== -->
+  <div class="modal-overlay" id="cutoffModal">
+    <div class="modal">
+      <h2>5 PM cutoff snapshot <button class="close-btn" data-close="cutoffModal">×</button></h2>
+      <p style="font-size:13px;color:var(--text-2);line-height:1.5;margin:0 0 14px;">
+        This logs every plate currently in <b>New</b> status to the Daily Update Log
+        with today's date. Use it right before sending the daily list to the operator.
+      </p>
+      <div id="cutoffPreview" style="background:var(--surface-2);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:13px;max-height:200px;overflow-y:auto;"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="cutoffModal">Cancel</button>
+        <button class="btn-confirm success" id="cutoffConfirmBtn">Snapshot now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ============================================================================
+    // CONFIG
+    // ============================================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbxszg18bucso9SNr-fqHkEDm2rCR-ShA8go0K1FcnmgP8uqgh-FnwGnM1wSWGj9LsJz/exec";
+    const STATUS_ORDER = ["Pending", "Transfer", "New", "Added", "Removed"];
+    const BRANCHES = ["Cheras", "Kuchai"];
+    const DEFAULT_BRANCH = "Cheras";
+
+    // ============================================================================
+    // STATE
+    // ============================================================================
+    const state = {
+      plates: [],
+      partners: [],
+      filter: "All",
+      search: "",
+      sort: "latest",          // default: newest first
+      partnerFilter: "",
+      currentBranch: DEFAULT_BRANCH, // which branch the user is currently viewing
+      adminMode: false,
+      pin: null,
+      partner: null,
+      selected: new Set(),
+      loading: false,
+    };
+
+    // Persist branch selection across reloads
+    try {
+      const savedBranch = localStorage.getItem("currentBranch");
+      if (savedBranch && BRANCHES.indexOf(savedBranch) >= 0) state.currentBranch = savedBranch;
+    } catch (e) {}
+
+    // Restore partner session if present
+    try {
+      const saved = localStorage.getItem("partnerSession");
+      if (saved) state.partner = JSON.parse(saved);
+    } catch (e) {}
+
+    // ============================================================================
+    // API CLIENT
+    // ============================================================================
+    let inflight = 0;
+    function showProgress(on) {
+      const el = document.getElementById("topProgress");
+      if (!el) return;
+      if (on) { inflight++; el.classList.add("active"); }
+      else {
+        inflight = Math.max(0, inflight - 1);
+        if (inflight === 0) el.classList.remove("active");
+      }
+    }
+
+    async function apiGet(action, params) {
+      showProgress(true);
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.set("action", action);
+        if (params) for (const k in params) url.searchParams.set(k, params[k]);
+        const res = await fetch(url.toString(), { method: "GET", redirect: "follow" });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Request failed");
+        return data;
+      } finally { showProgress(false); }
+    }
+
+    async function apiPost(action, body) {
+      showProgress(true);
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.set("action", action);
+        const payload = JSON.stringify(Object.assign({ action }, body || {}));
+        const res = await fetch(url.toString(), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: payload,
+          redirect: "follow",
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Request failed");
+        return data;
+      } finally { showProgress(false); }
+    }
+
+    function withBusy(btn, busyText, fn) {
+      return async function () {
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = busyText || "Working...";
+        try { await fn(); }
+        finally { btn.disabled = false; btn.textContent = original; }
+      };
+    }
+
+    // ============================================================================
+    // RENDERING
+    // ============================================================================
+    function counts() {
+      // Counts respect the current-branch filter so chip numbers match the visible list.
+      // Pending and Transfer are visually combined under the Pending chip — a partner-
+      // transferred plate sits "pending" at the new branch until operator confirms Added.
+      // The "All" chip excludes Removed (operator workflow focus); they remain visible
+      // only via the Removed chip.
+      const inBranch = state.plates.filter(p => (p.branch || DEFAULT_BRANCH) === state.currentBranch);
+      const c = { All: 0, Pending: 0, New: 0, Added: 0, Removed: 0 };
+      inBranch.forEach(p => {
+        if (p.status === "Pending" || p.status === "Transfer") c.Pending++;
+        else if (c[p.status] !== undefined) c[p.status]++;
+        if (p.status !== "Removed") c.All++;
+      });
+      return c;
+    }
+
+    function renderBranchTabs() {
+      const el = document.getElementById("branchTabs");
+      el.innerHTML = "";
+      BRANCHES.forEach(b => {
+        const btn = document.createElement("button");
+        btn.className = "branch-tab" + (state.currentBranch === b ? " active" : "");
+        btn.textContent = b;
+        btn.addEventListener("click", () => {
+          if (state.currentBranch === b) return;
+          state.currentBranch = b;
+          state.selected.clear();
+          localStorage.setItem("currentBranch", b);
+          render();
+        });
+        el.appendChild(btn);
+      });
+    }
+
+    function populateBranchSelect(sel, selected) {
+      sel.innerHTML = "";
+      BRANCHES.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b;
+        opt.textContent = b;
+        if (b === selected) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderFilters() {
+      const c = counts();
+      const tabs = ["All", "Pending", "New", "Added", "Removed"];
+      const el = document.getElementById("filterTabs");
+      el.innerHTML = "";
+      // My Car and the status chips are mutually exclusive — only ONE chip
+      // shows as active at any time. When My Car is on, status chips are not.
+      const isMyCarActive = state.partner && state.partnerFilter === state.partner.name;
+      tabs.forEach(t => {
+        const chip = document.createElement("button");
+        const isStatusActive = !isMyCarActive && state.filter === t;
+        chip.className = "chip " + t.toLowerCase() + (isStatusActive ? " active" : "");
+        chip.textContent = t + " · " + c[t];
+        chip.addEventListener("click", () => {
+          state.filter = t;
+          state.partnerFilter = "";   // status filter clears My Car
+          render();
+        });
+        el.appendChild(chip);
+        // Insert "My Car" chip immediately after "All" when partner is signed in.
+        if (t === "All" && state.partner) {
+          const me = document.createElement("button");
+          me.className = "chip my-profile" + (isMyCarActive ? " active" : "");
+          if (isMyCarActive) { me.style.background = "var(--primary)"; me.style.color = "#fff"; }
+          me.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l2-5a2 2 0 0 1 2-1h6a2 2 0 0 1 2 1l2 5"/><circle cx="7" cy="16" r="1.5"/><circle cx="17" cy="16" r="1.5"/><path d="M5 13v3M19 13v3"/></svg>My Car';
+          me.addEventListener("click", () => {
+            if (isMyCarActive) {
+              state.partnerFilter = "";
+              state.filter = "All";
+            } else {
+              state.partnerFilter = state.partner.name;
+              state.filter = "All";   // clear status filter
+            }
+            render();
+          });
+          el.appendChild(me);
+        }
+      });
+    }
+
+    function plateMatches(p) {
+      const q = state.search.trim().toLowerCase();
+      const branch = p.branch || DEFAULT_BRANCH;
+      if (branch !== state.currentBranch) return false;
+      if (state.filter === "All") {
+        // All chip excludes Removed — only visible via the Removed chip.
+        if (p.status === "Removed") return false;
+      } else if (state.filter === "Pending") {
+        // Pending chip catches both Pending and Transfer.
+        if (p.status !== "Pending" && p.status !== "Transfer") return false;
+      } else if (p.status !== state.filter) {
+        return false;
+      }
+      if (state.partnerFilter && (p.submittedBy || "") !== state.partnerFilter) return false;
+      if (!q) return true;
+      return (
+        (p.plate || "").toLowerCase().includes(q) ||
+        (p.status || "").toLowerCase().includes(q) ||
+        (p.remarks || "").toLowerCase().includes(q) ||
+        (p.submittedBy || "").toLowerCase().includes(q) ||
+        (p.carModel || "").toLowerCase().includes(q) ||
+        (p.dateAdded || "").toLowerCase().includes(q)
+      );
+    }
+
+    function statusRank(s) {
+      const i = STATUS_ORDER.indexOf(s);
+      return i < 0 ? 99 : i;
+    }
+
+    function plateSort(a, b) {
+      if (state.sort === "latest") return (b.dateAdded || "").localeCompare(a.dateAdded || "");
+      if (state.sort === "oldest") return (a.dateAdded || "").localeCompare(b.dateAdded || "");
+      return statusRank(a.status) - statusRank(b.status);
+    }
+
+    function renderList() {
+      const list = document.getElementById("plateList");
+      const filtered = state.plates.filter(plateMatches).sort(plateSort);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty">' +
+          (state.plates.length === 0
+            ? 'No plates yet. Tap "+ Submit plate" below to add one.'
+            : 'No plates match this filter.') +
+          '</div>';
+        return;
+      }
+
+      list.innerHTML = "";
+      const myName = state.partner && state.partner.name;
+      filtered.forEach(p => {
+        const card = document.createElement("div");
+        const owns = myName && p.submittedBy === myName;
+        card.className = "plate-card " + (p.status || "").toLowerCase() + (owns ? " own" : "");
+        const selected = state.selected.has(p.plate);
+        const meta = [];
+        if (p.dateAdded) meta.push(p.dateAdded);
+        if (p.submittedBy) meta.push("by " + p.submittedBy);
+        if (p.carModel) meta.push(p.carModel);
+        if (p.status === "Transfer" && p.targetBranch) meta.push("→ " + p.targetBranch);
+        if (p.remarks) meta.push(p.remarks);
+
+        card.innerHTML =
+          '<div class="check ' + (selected ? "checked" : "") + '"></div>' +
+          '<div class="body">' +
+            '<div class="row1">' +
+              '<span class="plate-number">' + escapeHtml(p.plate) + '</span>' +
+              '<span class="status-pill">' + p.status.toUpperCase() + '</span>' +
+            '</div>' +
+            (meta.length ? '<div class="plate-meta">' + escapeHtml(meta.join(" · ")) + '</div>' : "") +
+          '</div>';
+
+        card.addEventListener("click", () => onCardTap(p));
+        list.appendChild(card);
+      });
+    }
+
+    function renderBulkBar() {
+      const bar = document.getElementById("bulkBar");
+      const n = state.selected.size;
+      const hasSelectionContext = state.adminMode || !!state.partner;
+      if (n === 0 || !hasSelectionContext) { bar.classList.remove("has-selection"); return; }
+      bar.classList.add("has-selection");
+      document.getElementById("bulkCount").textContent = n + " selected";
+
+      const selectedPlates = state.plates.filter(p => state.selected.has(p.plate));
+      const hasPending  = selectedPlates.some(p => p.status === "Pending");
+      const hasRemovable = selectedPlates.some(p => p.status !== "Removed");
+      const hasTransfer = selectedPlates.some(p => p.status === "Transfer");
+      const hasTransferable = selectedPlates.some(p => p.status === "New" || p.status === "Added");
+      const otherBranch = BRANCHES.find(b => b !== state.currentBranch) || "";
+
+      document.getElementById("approveBtn").disabled = !hasPending;
+      document.getElementById("rejectBtn").disabled = !hasPending;
+      document.getElementById("bulkRemoveBtn").disabled = !hasRemovable;
+
+      const adminMoveBtn = document.getElementById("adminMoveBtn");
+      const partnerTransferBtn = document.getElementById("partnerTransferBtn");
+      const partnerCancelTransferBtn = document.getElementById("partnerCancelTransferBtn");
+
+      // Admin direct-move (only on non-Transfer plates)
+      adminMoveBtn.style.display = (state.adminMode && !hasTransfer && otherBranch) ? "" : "none";
+      if (adminMoveBtn.style.display !== "none") adminMoveBtn.textContent = "Move to " + otherBranch;
+
+      // Partner actions (only if signed in as partner, not admin)
+      if (!state.adminMode && state.partner) {
+        partnerTransferBtn.style.display = hasTransferable ? "" : "none";
+        if (partnerTransferBtn.style.display !== "none") partnerTransferBtn.textContent = "Transfer to " + otherBranch;
+        partnerCancelTransferBtn.style.display = hasTransfer ? "" : "none";
+      } else {
+        partnerTransferBtn.style.display = "none";
+        partnerCancelTransferBtn.style.display = "none";
+      }
+    }
+
+    function renderPartnerFilter() {
+      const sel = document.getElementById("partnerFilterSelect");
+      const known = Array.from(new Set(state.plates.map(p => p.submittedBy).filter(Boolean)));
+      // Merge with the partners tab list
+      state.partners.forEach(n => { if (known.indexOf(n) < 0) known.push(n); });
+      known.sort();
+      const current = state.partnerFilter;
+      sel.innerHTML = '<option value="">All partners</option>';
+      known.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        if (name === current) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderSyncStatus(msg) {
+      document.getElementById("syncStatus").textContent = msg || "";
+    }
+
+    function render() {
+      renderBranchTabs();
+      renderFilters();
+      renderPartnerFilter();
+      renderList();
+      renderBulkBar();
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function today10() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + m + "-" + day;
+    }
+
+    // ============================================================================
+    // INTERACTIONS
+    // ============================================================================
+    let tapTimer = null;
+    function onCardTap(plate) {
+      const isOwn = state.partner && plate.submittedBy === state.partner.name;
+      const canSelectAsPartner = state.partner && isOwn && plate.status !== "Removed";
+      const canSelectAsAdmin = state.adminMode;
+      if (!canSelectAsAdmin && !canSelectAsPartner) return; // read-only view
+      // Admin: single tap = toggle, double tap = edit. Partner: single tap toggles only.
+      if (canSelectAsAdmin && tapTimer) {
+        clearTimeout(tapTimer); tapTimer = null;
+        openEditModal(plate);
+        return;
+      }
+      const toggle = () => {
+        if (state.selected.has(plate.plate)) state.selected.delete(plate.plate);
+        else state.selected.add(plate.plate);
+        render();
+      };
+      if (canSelectAsAdmin) {
+        tapTimer = setTimeout(() => { tapTimer = null; toggle(); }, 230);
+      } else {
+        toggle();
+      }
+    }
+
+    // ---------- Submit plate (partner) ----------
+    function openSubmitModal() {
+      const sel = document.getElementById("submitPartner");
+      const partnerGroup = sel.closest(".form-group");
+      if (state.partner) {
+        // Signed in: hide the picker and auto-use the logged-in name
+        partnerGroup.style.display = "none";
+        sel.innerHTML = '<option value="' + state.partner.name + '" selected>' + state.partner.name + '</option>';
+      } else {
+        partnerGroup.style.display = "";
+        populatePartnerSelect(sel);
+      }
+      document.getElementById("submitPlate").value = "";
+      document.getElementById("submitCarModel").value = "";
+      populateBranchSelect(document.getElementById("submitBranch"), state.currentBranch);
+      openModal("submitModal");
+      setTimeout(() => document.getElementById("submitPlate").focus(), 100);
+    }
+
+    async function doSubmit() {
+      const partnerName = document.getElementById("submitPartner").value;
+      const plate = document.getElementById("submitPlate").value.trim().toUpperCase();
+      const carModel = document.getElementById("submitCarModel").value.trim();
+      const branch = document.getElementById("submitBranch").value;
+      if (!partnerName) return toast("Pick your name first", "error");
+      if (!plate) return toast("Enter a plate number", "error");
+      if (!branch) return toast("Pick a branch", "error");
+      const existing = state.plates.find(p => (p.plate || "").toUpperCase() === plate);
+      if (existing && existing.status !== "Removed") {
+        return toast(plate + " already on the list (" + existing.status + ")", "error");
+      }
+      closeModal("submitModal");
+      const optimistic = {
+        plate, status: "Pending", submittedBy: partnerName,
+        dateAdded: today10(), remarks: "", carModel: carModel, branch: branch, _opt: true,
+      };
+      state.plates.unshift(optimistic);
+      render();
+      toast("Submitted " + plate + " @ " + branch, "success");
+      try {
+        const res = await apiPost("submit", { partnerName, plate, carModel, branch });
+        const i = state.plates.findIndex(p => p._opt && p.plate === plate);
+        if (i >= 0) {
+          if (res.action === "already_exists") { state.plates.splice(i, 1); toast(plate + " already exists", "error"); }
+          else delete state.plates[i]._opt;
+        }
+        render();
+      } catch (e) {
+        const i = state.plates.findIndex(p => p._opt && p.plate === plate);
+        if (i >= 0) state.plates.splice(i, 1);
+        render();
+        toast("Submit failed: " + e.message, "error");
+      }
+    }
+
+    // ---------- Bulk submit (partner) ----------
+    function openBulkSubmitModal() {
+      const sel = document.getElementById("bulkSubmitPartner");
+      const partnerGroup = sel.closest(".form-group");
+      if (state.partner) {
+        partnerGroup.style.display = "none";
+        sel.innerHTML = '<option value="' + state.partner.name + '" selected>' + state.partner.name + '</option>';
+      } else {
+        partnerGroup.style.display = "";
+        populatePartnerSelect(sel);
+      }
+      document.getElementById("bulkSubmitPlates").value = "";
+      populateBranchSelect(document.getElementById("bulkSubmitBranch"), state.currentBranch);
+      updateBulkSummary();
+      openModal("bulkSubmitModal");
+    }
+
+    // Parse "PLATE, MODEL" lines. Returns [{plate, carModel}].
+    function parseBulkLines(text) {
+      return text.split(/\r?\n/).map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+        const comma = trimmed.indexOf(",");
+        if (comma < 0) return { plate: trimmed.toUpperCase(), carModel: "" };
+        return {
+          plate: trimmed.slice(0, comma).trim().toUpperCase(),
+          carModel: trimmed.slice(comma + 1).trim()
+        };
+      }).filter(x => x && x.plate);
+    }
+
+    function updateBulkSummary() {
+      const text = document.getElementById("bulkSubmitPlates").value;
+      const parsed = parseBulkLines(text);
+      const existing = new Set(state.plates.filter(p => p.status !== "Removed").map(p => p.plate.toUpperCase()));
+      const newOnes = parsed.filter(p => !existing.has(p.plate));
+      const dups = parsed.filter(p => existing.has(p.plate));
+      document.getElementById("bulkTotalCount").textContent = parsed.length + " line" + (parsed.length === 1 ? "" : "s");
+      document.getElementById("bulkNewCount").textContent = newOnes.length + " new";
+      document.getElementById("bulkDupCount").textContent = dups.length + " duplicate";
+    }
+
+    async function doBulkSubmit() {
+      const partnerName = document.getElementById("bulkSubmitPartner").value;
+      const text = document.getElementById("bulkSubmitPlates").value;
+      const branch = document.getElementById("bulkSubmitBranch").value;
+      const parsed = parseBulkLines(text);
+      if (!partnerName) return toast("Pick your name first", "error");
+      if (!branch) return toast("Pick a branch", "error");
+      if (parsed.length === 0) return toast("No plates to submit", "error");
+      const existing = new Set(state.plates.filter(p => p.status !== "Removed").map(p => (p.plate || "").toUpperCase()));
+      const fresh = parsed.filter(p => !existing.has(p.plate));
+      closeModal("bulkSubmitModal");
+      const today = today10();
+      fresh.forEach(p => state.plates.unshift({
+        plate: p.plate, status: "Pending", submittedBy: partnerName,
+        dateAdded: today, remarks: "", carModel: p.carModel, branch: branch, _opt: true
+      }));
+      render();
+      toast(fresh.length + " submitting...", "success");
+      try {
+        const res = await apiPost("bulkSubmit", { partnerName, plates: parsed, branch });
+        state.plates = state.plates.filter(p => !p._opt);
+        await loadPlates(true);
+        const msgs = [];
+        if (res.submitted && res.submitted.length) msgs.push(res.submitted.length + " submitted");
+        if (res.resubmitted && res.resubmitted.length) msgs.push(res.resubmitted.length + " re-submitted");
+        if (res.duplicates && res.duplicates.length) msgs.push(res.duplicates.length + " duplicate");
+        if (res.invalid && res.invalid.length) msgs.push(res.invalid.length + " invalid");
+        if (msgs.length) toast(msgs.join(", "), "success");
+      } catch (e) {
+        state.plates = state.plates.filter(p => !p._opt);
+        render();
+        toast("Bulk submit failed: " + e.message, "error");
+      }
+    }
+
+    // ---------- Partner sign in / out ----------
+    function applyPartnerSession() {
+      const badge = document.getElementById("partnerBadge");
+      const btn = document.getElementById("partnerToggleBtn");
+      if (state.partner && state.partner.name) {
+        document.body.classList.add("partner-mode");
+        badge.textContent = state.partner.name;
+        btn.textContent = "🙂";
+        btn.title = "Tap to sign out";
+      } else {
+        document.body.classList.remove("partner-mode");
+        badge.textContent = "";
+        btn.textContent = "👤";
+        btn.title = "Partner sign in";
+      }
+    }
+
+    function openPartnerLoginModal() {
+      // Remember last successful ID on this device for convenience.
+      const last = localStorage.getItem("lastPartnerId") || "";
+      document.getElementById("partnerLoginId").value = last;
+      document.getElementById("partnerLoginPin").value = "";
+      openModal("partnerLoginModal");
+      setTimeout(() => {
+        const field = last
+          ? document.getElementById("partnerLoginPin")
+          : document.getElementById("partnerLoginId");
+        field.focus();
+      }, 100);
+    }
+
+    async function doPartnerLogin() {
+      const id = document.getElementById("partnerLoginId").value.trim();
+      const password = document.getElementById("partnerLoginPin").value;
+      if (!id) return toast("Enter your ID", "error");
+      if (!password) return toast("Enter your password", "error");
+      try {
+        const res = await apiPost("partnerLogin", { id, password });
+        state.partner = { id: res.id, name: res.name, company: res.company || "", password };
+        // Keep legacy `pin` and `partnerName` fields for back-compat with other handlers.
+        state.partner.pin = password;
+        state.partner.partnerName = res.id;
+        localStorage.setItem("partnerSession", JSON.stringify(state.partner));
+        localStorage.setItem("lastPartnerId", res.id);
+        applyPartnerSession();
+        closeModal("partnerLoginModal");
+        toast(res.firstTime ? "Password set, signed in as " + res.name : "Signed in as " + res.name, "success");
+        render();
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    // ---------- Change PIN ----------
+    function openChangePinModal() {
+      closeModal("partnerProfileModal");
+      document.getElementById("currentPinInput").value = "";
+      document.getElementById("newPinInput").value = "";
+      document.getElementById("confirmPinInput").value = "";
+      openModal("changePinModal");
+      setTimeout(() => document.getElementById("currentPinInput").focus(), 100);
+    }
+
+    async function doChangePin() {
+      if (!state.partner) return toast("Sign in first", "error");
+      const cur = document.getElementById("currentPinInput").value;
+      const newP = document.getElementById("newPinInput").value;
+      const conf = document.getElementById("confirmPinInput").value;
+      if (!cur) return toast("Enter your current password", "error");
+      if (newP.length < 4 || newP.length > 16) return toast("New password: 4–16 characters", "error");
+      if (newP !== conf) return toast("Password entries don't match", "error");
+      if (newP === cur) return toast("Pick a different password", "error");
+      try {
+        await apiPost("partnerChangePassword", { id: state.partner.id, password: cur, newPassword: newP });
+        state.partner.password = newP;
+        state.partner.pin = newP;
+        localStorage.setItem("partnerSession", JSON.stringify(state.partner));
+        closeModal("changePinModal");
+        toast("Password updated", "success");
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    // ---------- Edit profile ----------
+    function openEditProfileModal() {
+      if (!state.partner) return;
+      closeModal("partnerProfileModal");
+      document.getElementById("editProfileId").textContent = state.partner.id || "";
+      document.getElementById("editProfileName").value = state.partner.name || "";
+      document.getElementById("editProfileCompany").value = state.partner.company || "";
+      openModal("editProfileModal");
+      setTimeout(() => document.getElementById("editProfileName").focus(), 100);
+    }
+
+    async function doEditProfile() {
+      if (!state.partner) return toast("Sign in first", "error");
+      const newName = document.getElementById("editProfileName").value.trim();
+      const newCompany = document.getElementById("editProfileCompany").value.trim();
+      if (!newName) return toast("Name cannot be blank", "error");
+      if (!newCompany) return toast("Company cannot be blank", "error");
+      const oldName = state.partner.name;
+      try {
+        const res = await apiPost("partnerUpdateProfile", {
+          id: state.partner.id, password: state.partner.password,
+          newName, newCompany
+        });
+        state.partner.name = res.name;
+        state.partner.company = res.company;
+        localStorage.setItem("partnerSession", JSON.stringify(state.partner));
+        // Locally retag plates so the UI reflects rename without a refetch
+        if (newName !== oldName) {
+          state.plates.forEach(p => { if (p.submittedBy === oldName) p.submittedBy = newName; });
+          if (state.partnerFilter === oldName) state.partnerFilter = newName;
+        }
+        applyPartnerSession();
+        closeModal("editProfileModal");
+        toast("Profile updated", "success");
+        render();
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    function partnerSignOut() {
+      state.partner = null;
+      state.selected.clear();
+      localStorage.removeItem("partnerSession");
+      applyPartnerSession();
+      render();
+      toast("Signed out", "success");
+    }
+
+    function onPartnerToggle() {
+      if (state.partner) openProfileModal();
+      else openPartnerLoginModal();
+    }
+
+    // ---------- My profile (partner) ----------
+    function openProfileModal() {
+      if (!state.partner) return;
+      const name = state.partner.name;
+      const company = state.partner.company || "—";
+      const mine = state.plates.filter(p => p.submittedBy === name);
+      const counts = { Pending: 0, New: 0, Added: 0, Removed: 0 };
+      mine.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+
+      const initials = name.split(/\s+/).map(s => s.charAt(0)).slice(0, 2).join("").toUpperCase() || "?";
+      document.getElementById("profileAvatar").textContent = initials;
+      document.getElementById("profileName").textContent = name;
+      document.getElementById("profileCompany").textContent = company + (state.partner.id ? " · " + state.partner.id : "");
+      document.getElementById("profileStatPending").textContent = counts.Pending;
+      document.getElementById("profileStatNew").textContent = counts.New;
+      document.getElementById("profileStatAdded").textContent = counts.Added;
+      document.getElementById("profileStatRemoved").textContent = counts.Removed;
+      document.getElementById("profileStatTotal").textContent = mine.length;
+      openModal("partnerProfileModal");
+    }
+
+    // ---------- Partner sign-up ----------
+    function openSignUpModal() {
+      closeModal("partnerLoginModal");
+      document.getElementById("signUpId").value = "";
+      document.getElementById("signUpName").value = "";
+      document.getElementById("signUpCompany").value = "";
+      document.getElementById("signUpPin").value = "";
+      openModal("partnerSignUpModal");
+      setTimeout(() => document.getElementById("signUpId").focus(), 100);
+    }
+
+    async function doSignUp() {
+      const id = document.getElementById("signUpId").value.trim();
+      const name = document.getElementById("signUpName").value.trim();
+      const company = document.getElementById("signUpCompany").value.trim();
+      const password = document.getElementById("signUpPin").value;
+      if (!id) return toast("Enter an ID", "error");
+      if (!/^[A-Za-z0-9._-]{3,32}$/.test(id)) return toast("ID: 3–32 chars, letters/numbers/._- only", "error");
+      if (!name) return toast("Enter your name", "error");
+      if (!company) return toast("Enter your company", "error");
+      if (password.length < 4 || password.length > 16) return toast("Password: 4–16 chars", "error");
+      try {
+        await apiPost("partnerRegister", { id, name, company, password });
+        closeModal("partnerSignUpModal");
+        toast("Application submitted — admin will approve soon", "success");
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    // ---------- Admin Dashboard ----------
+    function openAdminDashboard() {
+      switchDashTab("pendings");
+      openModal("adminDashboardModal");
+    }
+
+    function switchDashTab(tab) {
+      document.querySelectorAll(".dash-tab").forEach(t => {
+        t.classList.toggle("active", t.getAttribute("data-dashtab") === tab);
+      });
+      document.querySelectorAll(".dash-panel").forEach(p => {
+        p.classList.toggle("hidden", p.id !== "dash" + tab.charAt(0).toUpperCase() + tab.slice(1));
+      });
+      if (tab === "pendings") renderDashPendings();
+      else if (tab === "partners") loadAndRenderDashPartners();
+      else if (tab === "operations") renderDashOperations();
+    }
+
+    function renderDashPendings() {
+      const listEl = document.getElementById("dashPendingsList");
+      const pendings = state.plates
+        .filter(p => p.status === "Pending")
+        .sort((a, b) => (b.dateAdded || "").localeCompare(a.dateAdded || ""));
+      if (pendings.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:24px 14px;">No pending plates across any branch</div>';
+        return;
+      }
+      // Group by branch
+      const grouped = {};
+      BRANCHES.forEach(b => { grouped[b] = []; });
+      pendings.forEach(p => {
+        const b = p.branch || DEFAULT_BRANCH;
+        if (!grouped[b]) grouped[b] = [];
+        grouped[b].push(p);
+      });
+      listEl.innerHTML = "";
+      BRANCHES.forEach(b => {
+        const group = grouped[b];
+        if (!group || group.length === 0) return;
+        const head = document.createElement("div");
+        head.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin:8px 0 6px;";
+        head.innerHTML =
+          '<div style="font-size:13px;font-weight:600;">' + escapeHtml(b) + ' · ' + group.length + ' pending</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button data-bulkapprove="' + escapeHtml(b) + '" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:var(--success);color:#fff;font-weight:600;cursor:pointer;">Approve all</button>' +
+          '</div>';
+        listEl.appendChild(head);
+        group.forEach(p => {
+          const row = document.createElement("div");
+          row.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:6px;gap:8px;";
+          const meta = [p.submittedBy, p.carModel, p.dateAdded].filter(Boolean).join(" · ");
+          row.innerHTML =
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;font-size:15px;letter-spacing:0.5px;">' + escapeHtml(p.plate) + '</div>' +
+              '<div style="font-size:11px;color:var(--text-2);">' + escapeHtml(meta) + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;">' +
+              '<button data-approve-plate="' + escapeHtml(p.plate) + '" style="background:var(--success);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Approve</button>' +
+              '<button data-reject-plate="' + escapeHtml(p.plate) + '" style="background:var(--text-2);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Reject</button>' +
+            '</div>';
+          listEl.appendChild(row);
+        });
+      });
+      // Wire actions
+      listEl.querySelectorAll("[data-approve-plate]").forEach(b => {
+        b.addEventListener("click", () => dashApprovePlates([b.getAttribute("data-approve-plate")]));
+      });
+      listEl.querySelectorAll("[data-reject-plate]").forEach(b => {
+        b.addEventListener("click", () => dashRejectPlates([b.getAttribute("data-reject-plate")]));
+      });
+      listEl.querySelectorAll("[data-bulkapprove]").forEach(b => {
+        b.addEventListener("click", () => {
+          const br = b.getAttribute("data-bulkapprove");
+          const plates = state.plates
+            .filter(p => p.status === "Pending" && (p.branch || DEFAULT_BRANCH) === br)
+            .map(p => p.plate);
+          dashApprovePlates(plates);
+        });
+      });
+    }
+
+    async function dashApprovePlates(plates) {
+      if (plates.length === 0) return;
+      try {
+        await apiPost("approve", { pin: state.pin, plates });
+        toast(plates.length + " approved", "success");
+        state.plates.forEach(p => { if (plates.indexOf(p.plate) >= 0) p.status = "New"; });
+        renderDashPendings();
+        render();
+      } catch (e) { toast(e.message, "error"); }
+    }
+
+    async function dashRejectPlates(plates) {
+      if (plates.length === 0) return;
+      if (!confirm("Reject " + plates.length + " plate(s)?")) return;
+      try {
+        await apiPost("reject", { pin: state.pin, plates });
+        toast(plates.length + " rejected", "success");
+        state.plates = state.plates.filter(p => plates.indexOf(p.plate) < 0);
+        renderDashPendings();
+        render();
+      } catch (e) { toast(e.message, "error"); }
+    }
+
+    async function loadAndRenderDashPartners() {
+      const listEl = document.getElementById("dashPartnersList");
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:14px;">Loading...</div>';
+      try {
+        const res = await apiGet("allPartners", { pin: state.pin });
+        allPartnerRows = res.partners || [];
+        renderDashPartners();
+      } catch (e) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--danger);padding:14px;">Error: ' + escapeHtml(e.message) + '</div>';
+      }
+    }
+
+    function renderDashPartners() {
+      // Reuse renderPartnerList logic but target the dash list
+      const listEl = document.getElementById("dashPartnersList");
+      const filtered = partnerTabFilter === "all"
+        ? allPartnerRows
+        : allPartnerRows.filter(p => p.status === partnerTabFilter);
+      document.querySelectorAll("#dashPartners .partner-tab").forEach(t => {
+        t.classList.toggle("active", t.getAttribute("data-tab") === partnerTabFilter);
+      });
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:24px 14px;">No partners in this view</div>';
+        return;
+      }
+      const rank = { Pending: 0, Approved: 1, Deactivated: 2 };
+      filtered.sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9));
+      listEl.innerHTML = "";
+      filtered.forEach(p => {
+        const status = p.status || "Pending";
+        const row = document.createElement("div");
+        row.style.cssText = "padding:10px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:8px;";
+        let actions = "";
+        if (status === "Pending") {
+          actions =
+            '<button data-action="approve" data-id="' + escapeHtml(p.id) + '" style="background:var(--success);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Approve</button>' +
+            '<button data-action="reject" data-id="' + escapeHtml(p.id) + '" style="background:var(--text-2);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Reject</button>';
+        } else if (status === "Approved") {
+          actions =
+            '<button data-action="deactivate" data-id="' + escapeHtml(p.id) + '" style="background:var(--danger);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Deactivate</button>';
+        } else if (status === "Deactivated") {
+          actions =
+            '<button data-action="reactivate" data-id="' + escapeHtml(p.id) + '" style="background:var(--success);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;border:none;font-weight:600;cursor:pointer;">Re-activate</button>';
+        }
+        row.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;font-size:14px;">' + escapeHtml(p.name || p.id) +
+                '<span class="partner-row-status ' + status.toLowerCase() + '">' + status.toUpperCase() + '</span>' +
+              '</div>' +
+              '<div style="font-size:11px;color:var(--text-2);">' + escapeHtml(p.company || "—") + ' · ID: ' + escapeHtml(p.id || "") + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">' + actions + '</div>' +
+          '</div>';
+        listEl.appendChild(row);
+      });
+      listEl.querySelectorAll("[data-action]").forEach(b => {
+        b.addEventListener("click", async () => {
+          await onPartnerAction(b.getAttribute("data-action"), b.getAttribute("data-id"));
+          renderDashPartners();
+        });
+      });
+    }
+
+    function renderDashOperations() {
+      const listEl = document.getElementById("dashOperationsList");
+      listEl.innerHTML = "";
+      BRANCHES.forEach(branch => {
+        const platesAtBranch = state.plates.filter(p => (p.branch || DEFAULT_BRANCH) === branch);
+        const counts = { Pending: 0, New: 0, Added: 0, Removed: 0 };
+        platesAtBranch.forEach(p => {
+          if (p.status === "Pending" || p.status === "Transfer") counts.Pending++;
+          else if (counts[p.status] !== undefined) counts[p.status]++;
+        });
+        const card = document.createElement("div");
+        card.className = "branch-card";
+        card.innerHTML =
+          '<h3>' + escapeHtml(branch) + '</h3>' +
+          '<div class="stats">' +
+            '<span class="stat pending">' + counts.Pending + ' Pending</span>' +
+            '<span class="stat new">' + counts.New + ' New</span>' +
+            '<span class="stat added">' + counts.Added + ' Added</span>' +
+            '<span class="stat removed">' + counts.Removed + ' Removed</span>' +
+          '</div>' +
+          '<div class="ops">' +
+            '<button data-copynew="' + escapeHtml(branch) + '" class="primary">Copy New (' + counts.New + ')</button>' +
+            '<button data-csv="' + escapeHtml(branch) + '">Download CSV</button>' +
+          '</div>';
+        listEl.appendChild(card);
+      });
+      listEl.querySelectorAll("[data-copynew]").forEach(b => {
+        b.addEventListener("click", () => dashCopyNewForBranch(b.getAttribute("data-copynew")));
+      });
+      listEl.querySelectorAll("[data-csv]").forEach(b => {
+        b.addEventListener("click", () => dashCsvForBranch(b.getAttribute("data-csv")));
+      });
+    }
+
+    async function dashCopyNewForBranch(branch) {
+      const newPlates = state.plates.filter(p => p.status === "New" && (p.branch || DEFAULT_BRANCH) === branch);
+      if (newPlates.length === 0) return toast("No New plates at " + branch, "error");
+      const max = 12;
+      let displayList = newPlates.slice(0, max).map(p => p.plate + (p.carModel ? "  (" + p.carModel + ")" : "")).join("\n");
+      if (newPlates.length > max) displayList += "\n... and " + (newPlates.length - max) + " more";
+      if (!confirm("Copy " + newPlates.length + " New plate(s) from " + branch + "?\n\n" + displayList)) return;
+      const text = newPlates.map(p => p.plate).join("\n");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+        else {
+          const ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta);
+        }
+        toast("Copied " + newPlates.length + " from " + branch, "success");
+      } catch (e) { toast("Copy failed: " + e.message, "error"); }
+    }
+
+    async function dashCsvForBranch(branch) {
+      // Reuse the export endpoint but filter client-side to just this branch's plates
+      try {
+        const platesAtBranch = state.plates.filter(p => (p.branch || DEFAULT_BRANCH) === branch);
+        if (platesAtBranch.length === 0) return toast("No plates at " + branch, "error");
+        const header = ["Plate Number", "Status", "Date", "Submitted By", "Car Model", "Remarks"];
+        const lines = [header.join(",")];
+        platesAtBranch.forEach(p => {
+          const row = [p.plate, p.status, p.dateAdded, p.submittedBy, p.carModel, p.remarks]
+            .map(v => {
+              v = String(v == null ? "" : v);
+              return (v.indexOf(",") >= 0 || v.indexOf('"') >= 0 || v.indexOf("\n") >= 0)
+                ? '"' + v.replace(/"/g, '""') + '"' : v;
+            });
+          lines.push(row.join(","));
+        });
+        const csv = lines.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = branch.toLowerCase() + "-parking-" + today10() + ".csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast("Downloaded " + branch + " CSV", "success");
+      } catch (e) { toast(e.message, "error"); }
+    }
+
+    // ---------- Manage partners (admin) ----------
+    let allPartnerRows = [];
+    let partnerTabFilter = "all";
+
+    async function openPendingPartnersModal() {
+      const listEl = document.getElementById("pendingPartnersList");
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:14px;">Loading...</div>';
+      openModal("pendingPartnersModal");
+      try {
+        const res = await apiGet("allPartners", { pin: state.pin });
+        allPartnerRows = res.partners || [];
+        renderPartnerList();
+      } catch (e) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--danger);padding:14px;">Error: ' + escapeHtml(e.message) + '</div>';
+      }
+    }
+
+    function renderPartnerList() {
+      const listEl = document.getElementById("pendingPartnersList");
+      const filtered = partnerTabFilter === "all"
+        ? allPartnerRows
+        : allPartnerRows.filter(p => p.status === partnerTabFilter);
+      // Highlight active tab
+      document.querySelectorAll(".partner-tab").forEach(t => {
+        t.classList.toggle("active", t.getAttribute("data-tab") === partnerTabFilter);
+      });
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:24px 14px;">No partners in this view</div>';
+        return;
+      }
+      // Sort: Pending first, then Approved, then Deactivated
+      const rank = { Pending: 0, Approved: 1, Deactivated: 2 };
+      filtered.sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9));
+
+      listEl.innerHTML = "";
+      filtered.forEach(p => {
+        const status = p.status || "Pending";
+        const row = document.createElement("div");
+        row.style.cssText = "padding:12px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:8px;";
+        let actions = "";
+        if (status === "Pending") {
+          actions =
+            '<button data-action="approve" data-id="' + escapeHtml(p.id) + '" style="background:var(--success);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;">Approve</button>' +
+            '<button data-action="reject" data-id="' + escapeHtml(p.id) + '" style="background:var(--text-2);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;">Reject</button>';
+        } else if (status === "Approved") {
+          actions =
+            '<button data-action="deactivate" data-id="' + escapeHtml(p.id) + '" style="background:var(--danger);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;">Deactivate</button>';
+        } else if (status === "Deactivated") {
+          actions =
+            '<button data-action="reactivate" data-id="' + escapeHtml(p.id) + '" style="background:var(--success);color:#fff;font-size:12px;padding:7px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer;">Re-activate</button>';
+        }
+        row.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;">' + escapeHtml(p.name || p.id) +
+                '<span class="partner-row-status ' + status.toLowerCase() + '">' + status.toUpperCase() + '</span>' +
+              '</div>' +
+              '<div style="font-size:12px;color:var(--text-2);margin-top:2px;">' + escapeHtml(p.company || "—") + ' · ID: ' + escapeHtml(p.id || "") + '</div>' +
+              (p.appliedAt ? '<div style="font-size:11px;color:var(--text-3);">Applied ' + escapeHtml(p.appliedAt) + '</div>' : '') +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">' + actions + '</div>' +
+          '</div>';
+        listEl.appendChild(row);
+      });
+      // Wire action buttons
+      listEl.querySelectorAll("[data-action]").forEach(b => {
+        b.addEventListener("click", () => onPartnerAction(b.getAttribute("data-action"), b.getAttribute("data-id")));
+      });
+    }
+
+    async function onPartnerAction(action, id) {
+      try {
+        if (action === "approve") {
+          await apiPost("setPartnerStatus", { pin: state.pin, ids: [id], status: "Approved" });
+          toast(id + " approved", "success");
+        } else if (action === "deactivate") {
+          if (!confirm("Deactivate " + id + "? They won't be able to sign in.")) return;
+          await apiPost("setPartnerStatus", { pin: state.pin, ids: [id], status: "Deactivated" });
+          toast(id + " deactivated", "success");
+        } else if (action === "reactivate") {
+          await apiPost("setPartnerStatus", { pin: state.pin, ids: [id], status: "Approved" });
+          toast(id + " re-activated", "success");
+        } else if (action === "reject") {
+          if (!confirm("Reject application from " + id + "? Their row will be deleted.")) return;
+          await apiPost("rejectPartners", { pin: state.pin, ids: [id] });
+          toast(id + " rejected", "success");
+        }
+        // Reload + re-render
+        const res = await apiGet("allPartners", { pin: state.pin });
+        allPartnerRows = res.partners || [];
+        renderPartnerList();
+        loadPartners();   // refresh the in-app partners list used by other flows
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    // ---------- PIN (admin gate) ----------
+    function openPinModal() {
+      document.getElementById("pinInput").value = "";
+      openModal("pinModal");
+      setTimeout(() => document.getElementById("pinInput").focus(), 100);
+    }
+
+    function confirmPin() {
+      const pin = document.getElementById("pinInput").value;
+      // Server enforces the PIN on writes; this client check is just a UX gate.
+      if (pin !== "9988") { toast("Wrong PIN", "error"); return; }
+      state.pin = pin;
+      state.adminMode = true;
+      document.body.classList.add("admin-mode");
+      document.getElementById("adminToggleBtn").textContent = "🔓";
+      closeModal("pinModal");
+      toast("Admin mode unlocked", "success");
+      render();
+    }
+
+    function lockAdmin() {
+      state.adminMode = false;
+      state.pin = null;
+      state.selected.clear();
+      document.body.classList.remove("admin-mode");
+      document.getElementById("adminToggleBtn").textContent = "🔒";
+      render();
+      toast("Locked", "success");
+    }
+
+    // ---------- Approve / reject (admin) ----------
+    function selectedOfStatus(targetStatus) {
+      return state.plates
+        .filter(p => state.selected.has(p.plate) && p.status === targetStatus)
+        .map(p => p.plate);
+    }
+    function selectedNotStatus(excludedStatus) {
+      return state.plates
+        .filter(p => state.selected.has(p.plate) && p.status !== excludedStatus)
+        .map(p => p.plate);
+    }
+
+    async function approveSelected() {
+      const plates = selectedOfStatus("Pending");
+      if (plates.length === 0) return toast("Pick at least one Pending plate", "error");
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => { if (plates.indexOf(p.plate) >= 0) p.status = "New"; });
+      state.selected.clear();
+      render();
+      toast(plates.length + " approved", "success");
+      try { await apiPost("approve", { pin: state.pin, plates }); }
+      catch (e) { state.plates = snapshot; render(); toast("Approve failed: " + e.message, "error"); }
+    }
+
+    async function rejectSelected() {
+      const plates = selectedOfStatus("Pending");
+      if (plates.length === 0) return toast("Pick at least one Pending plate", "error");
+      if (!confirm("Reject " + plates.length + " plate(s)?")) return;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates = state.plates.filter(p => plates.indexOf(p.plate) < 0);
+      state.selected.clear();
+      render();
+      toast(plates.length + " rejected", "success");
+      try { await apiPost("reject", { pin: state.pin, plates }); }
+      catch (e) { state.plates = snapshot; render(); toast("Reject failed: " + e.message, "error"); }
+    }
+
+    // ---------- Transfer actions ----------
+    async function partnerRequestTransfer() {
+      if (!state.partner) return toast("Sign in first", "error");
+      const otherBranch = BRANCHES.find(b => b !== state.currentBranch);
+      if (!otherBranch) return toast("No other branch", "error");
+      const own = new Set(state.plates.filter(p => p.submittedBy === state.partner.name).map(p => p.plate));
+      let plates = state.plates
+        .filter(p => state.selected.has(p.plate))
+        .filter(p => own.has(p.plate))
+        .filter(p => p.status === "New" || p.status === "Added")
+        .map(p => p.plate);
+      if (plates.length === 0) return toast("Pick your own New/Added plates first", "error");
+      if (!confirm("Transfer " + plates.length + " plate(s) to " + otherBranch + "?")) return;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => {
+        if (plates.indexOf(p.plate) >= 0) {
+          p.branch = otherBranch;
+          p.targetBranch = "";
+          // If target was previously in addedAt for this plate, keep Added.
+          // Otherwise reset to New so the target operator adds it.
+          const hist = Array.isArray(p.addedAt) ? p.addedAt : [];
+          p.status = hist.indexOf(otherBranch) >= 0 ? "Added" : "New";
+        }
+      });
+      state.selected.clear();
+      render();
+      toast("Transferred " + plates.length + " to " + otherBranch, "success");
+      try {
+        await apiPost("partnerRequestTransfer", {
+          id: state.partner.id, password: state.partner.password,
+          plates, targetBranch: otherBranch
+        });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Transfer failed: " + e.message, "error");
+      }
+    }
+
+    async function partnerCancelTransfer() {
+      if (!state.partner) return toast("Sign in first", "error");
+      const own = new Set(state.plates.filter(p => p.submittedBy === state.partner.name).map(p => p.plate));
+      let plates = state.plates
+        .filter(p => state.selected.has(p.plate))
+        .filter(p => own.has(p.plate))
+        .filter(p => p.status === "Transfer")
+        .map(p => p.plate);
+      if (plates.length === 0) return toast("Pick your own transfer-pending plates", "error");
+      if (!confirm("Cancel " + plates.length + " transfer request(s)?")) return;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => {
+        if (plates.indexOf(p.plate) >= 0) { p.status = "New"; p.targetBranch = ""; }
+      });
+      state.selected.clear();
+      render();
+      toast(plates.length + " transfer(s) cancelled — now New", "success");
+      try {
+        await apiPost("partnerCancelTransfer", {
+          id: state.partner.id, password: state.partner.password, plates
+        });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Cancel failed: " + e.message, "error");
+      }
+    }
+
+    async function adminApproveTransfer() {
+      let plates = state.plates
+        .filter(p => state.selected.has(p.plate))
+        .filter(p => p.status === "Transfer")
+        .map(p => p.plate);
+      if (plates.length === 0) return toast("No transfer requests selected", "error");
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => {
+        if (plates.indexOf(p.plate) >= 0 && p.targetBranch) {
+          p.branch = p.targetBranch;
+          p.status = "New";
+          p.targetBranch = "";
+        }
+      });
+      state.selected.clear();
+      render();
+      toast(plates.length + " transfer(s) approved", "success");
+      try {
+        await apiPost("approveTransfer", { pin: state.pin, plates });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Approve failed: " + e.message, "error");
+      }
+    }
+
+    async function adminMoveBranch() {
+      const otherBranch = BRANCHES.find(b => b !== state.currentBranch);
+      if (!otherBranch) return;
+      let plates = state.plates
+        .filter(p => state.selected.has(p.plate))
+        .filter(p => p.status !== "Transfer")
+        .map(p => p.plate);
+      if (plates.length === 0) return toast("No eligible plates selected", "error");
+      if (!confirm("Move " + plates.length + " plate(s) to " + otherBranch + "?\nThis bypasses the transfer-approval flow.")) return;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => {
+        if (plates.indexOf(p.plate) >= 0) p.branch = otherBranch;
+      });
+      state.selected.clear();
+      render();
+      toast(plates.length + " moved to " + otherBranch, "success");
+      try {
+        await apiPost("transferPlates", { pin: state.pin, plates, branch: otherBranch });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Move failed: " + e.message, "error");
+      }
+    }
+
+    async function bulkRemoveSelected() {
+      let plates = selectedNotStatus("Removed");
+      if (plates.length === 0) return toast("Nothing eligible to remove", "error");
+      // Partner mode: only remove own plates
+      if (!state.adminMode && state.partner) {
+        const own = new Set(state.plates.filter(p => p.submittedBy === state.partner.name).map(p => p.plate));
+        plates = plates.filter(p => own.has(p));
+        if (plates.length === 0) return toast("You can only remove your own plates", "error");
+      }
+      if (!confirm("Mark " + plates.length + " plate(s) as Removed?")) return;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      state.plates.forEach(p => { if (plates.indexOf(p.plate) >= 0) p.status = "Removed"; });
+      state.selected.clear();
+      render();
+      toast(plates.length + " removed", "success");
+      try {
+        if (state.adminMode) {
+          await Promise.all(plates.map(plate => apiPost("remove", { pin: state.pin, plate })));
+        } else {
+          await apiPost("partnerBulkRemove", { id: state.partner.id, password: state.partner.password, plates });
+        }
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Remove failed: " + e.message, "error");
+      }
+    }
+
+    // ---------- Edit plate (admin) ----------
+    let editingPlate = null;
+    function openEditModal(plate) {
+      editingPlate = plate;
+      document.getElementById("editPlate").textContent = plate.plate;
+      document.getElementById("editStatus").value = plate.status;
+      document.getElementById("editRemarks").value = plate.remarks || "";
+      document.getElementById("editCarModel").value = plate.carModel || "";
+      populateBranchSelect(document.getElementById("editBranch"), plate.branch || DEFAULT_BRANCH);
+      openModal("editModal");
+    }
+
+    async function saveEdit() {
+      if (!editingPlate) return;
+      const newStatus = document.getElementById("editStatus").value;
+      const newRemarks = document.getElementById("editRemarks").value;
+      const newCarModel = document.getElementById("editCarModel").value;
+      const newBranch = document.getElementById("editBranch").value;
+      const target = editingPlate;
+      closeModal("editModal");
+      editingPlate = null;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      const idx = state.plates.findIndex(p => p.plate === target.plate);
+      if (idx >= 0) {
+        state.plates[idx].status = newStatus;
+        state.plates[idx].remarks = newRemarks;
+        state.plates[idx].carModel = newCarModel;
+        state.plates[idx].branch = newBranch;
+      }
+      render();
+      toast("Updated " + target.plate, "success");
+      try {
+        await apiPost("update", { pin: state.pin, plate: target.plate, status: newStatus, remarks: newRemarks, carModel: newCarModel, branch: newBranch });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Update failed: " + e.message, "error");
+      }
+    }
+
+    async function removeEdited() {
+      if (!editingPlate) return;
+      if (!confirm("Mark " + editingPlate.plate + " as Removed?")) return;
+      const target = editingPlate;
+      closeModal("editModal");
+      editingPlate = null;
+      const snapshot = state.plates.map(p => Object.assign({}, p));
+      const idx = state.plates.findIndex(p => p.plate === target.plate);
+      if (idx >= 0) state.plates[idx].status = "Removed";
+      render();
+      toast(target.plate + " removed", "success");
+      try {
+        await apiPost("remove", { pin: state.pin, plate: target.plate });
+      } catch (e) {
+        state.plates = snapshot;
+        render();
+        toast("Remove failed: " + e.message, "error");
+      }
+    }
+
+    // ---------- CSV export (admin) ----------
+    async function exportCsv() {
+      try {
+        const res = await apiGet("export");
+        const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "l3-parking-" + new Date().toISOString().slice(0, 10) + ".csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast("CSV downloaded", "success");
+      } catch (e) { toast("Error: " + e.message, "error"); }
+    }
+
+    // ---------- Copy New plates to clipboard (admin) ----------
+    async function copyNewPlates() {
+      const branch = state.currentBranch;
+      const newPlates = state.plates.filter(p => p.status === "New" && (p.branch || DEFAULT_BRANCH) === branch);
+      if (newPlates.length === 0) return toast("No plates in New status at " + branch, "error");
+
+      // Show preview list before copying
+      const preview = newPlates.map(p => p.plate + (p.carModel ? "  (" + p.carModel + ")" : "")).join("\n");
+      const max = 12;
+      let displayList = newPlates.slice(0, max).map(p => p.plate + (p.carModel ? "  (" + p.carModel + ")" : "")).join("\n");
+      if (newPlates.length > max) displayList += "\n... and " + (newPlates.length - max) + " more";
+      const msg = "Copy " + newPlates.length + " New plate" + (newPlates.length === 1 ? "" : "s") + " from " + branch + "?\n\n" + displayList;
+      if (!confirm(msg)) return;
+
+      const text = newPlates.map(p => p.plate).join("\n");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        toast("Copied " + newPlates.length + " plate" + (newPlates.length === 1 ? "" : "s") + " from " + branch, "success");
+      } catch (e) {
+        toast("Copy failed: " + e.message, "error");
+      }
+    }
+
+    // ============================================================================
+    // MODAL HELPERS
+    // ============================================================================
+    function openModal(id) { document.getElementById(id).classList.add("open"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+    function closeAllModals() {
+      document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"));
+    }
+
+    function populatePartnerSelect(sel) {
+      sel.innerHTML = '<option value="">Pick your name...</option>';
+      state.partners.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      // Remember last pick on this device
+      const last = localStorage.getItem("lastPartner");
+      if (last && state.partners.includes(last)) sel.value = last;
+      sel.addEventListener("change", () => {
+        if (sel.value) localStorage.setItem("lastPartner", sel.value);
+      }, { once: true });
+    }
+
+    // ============================================================================
+    // TOAST
+    // ============================================================================
+    function toast(msg, kind) {
+      const el = document.createElement("div");
+      el.className = "toast" + (kind ? " " + kind : "");
+      el.textContent = msg;
+      const container = document.getElementById("toastContainer");
+      container.appendChild(el);
+      setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; }, 2400);
+      setTimeout(() => el.remove(), 2800);
+    }
+
+    // ============================================================================
+    // DATA LOADING
+    // ============================================================================
+    async function loadPlates(silent) {
+      try {
+        if (!silent) renderSyncStatus("Syncing...");
+        const res = await apiGet("list");
+        state.plates = res.plates || [];
+        renderSyncStatus("Last synced " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+        render();
+      } catch (e) {
+        renderSyncStatus("Sync failed — tap ↻ to retry");
+        if (!silent) toast("Could not load plates: " + e.message, "error");
+      }
+    }
+
+    async function loadPartners() {
+      try {
+        const res = await apiGet("partners");
+        state.partners = res.partners || [];
+      } catch (e) {
+        toast("Could not load partner list", "error");
+      }
+    }
+
+    // ============================================================================
+    // EVENT WIRING
+    // ============================================================================
+    function debounce(fn, ms) {
+      let t; return function () { clearTimeout(t); const args = arguments; t = setTimeout(() => fn.apply(this, args), ms); };
+    }
+
+    function wire() {
+      // Header
+      document.getElementById("refreshBtn").addEventListener("click", loadPlates);
+      document.getElementById("adminToggleBtn").addEventListener("click", () => {
+        if (state.adminMode) lockAdmin();
+        else openPinModal();
+      });
+      document.getElementById("partnerToggleBtn").addEventListener("click", onPartnerToggle);
+      document.getElementById("partnerLoginConfirmBtn").addEventListener("click", doPartnerLogin);
+      document.getElementById("partnerLoginPin").addEventListener("keydown", e => { if (e.key === "Enter") doPartnerLogin(); });
+      document.getElementById("openSignUpLink").addEventListener("click", e => { e.preventDefault(); openSignUpModal(); });
+      document.getElementById("signUpConfirmBtn").addEventListener("click", doSignUp);
+      document.getElementById("signUpPin").addEventListener("keydown", e => { if (e.key === "Enter") doSignUp(); });
+      document.getElementById("adminDashboardBtn").addEventListener("click", openAdminDashboard);
+      // Dashboard tab switching
+      document.querySelectorAll(".dash-tab").forEach(t => {
+        t.addEventListener("click", () => switchDashTab(t.getAttribute("data-dashtab")));
+      });
+      // Partner tabs — both the standalone modal AND the dashboard's partner sub-tab
+      document.querySelectorAll(".partner-tab").forEach(t => {
+        t.addEventListener("click", () => {
+          partnerTabFilter = t.getAttribute("data-tab");
+          const isDash = t.getAttribute("data-dash") === "1";
+          if (isDash) renderDashPartners();
+          else renderPartnerList();
+        });
+      });
+
+      // Profile modal
+      document.getElementById("profileEditBtn").addEventListener("click", openEditProfileModal);
+      document.getElementById("profileChangePinBtn").addEventListener("click", openChangePinModal);
+      document.getElementById("profileSignOutBtn").addEventListener("click", () => {
+        closeModal("partnerProfileModal");
+        partnerSignOut();
+      });
+      // Edit profile modal
+      document.getElementById("editProfileSaveBtn").addEventListener("click", doEditProfile);
+      // Change-password modal
+      document.getElementById("changePinConfirmBtn").addEventListener("click", doChangePin);
+      document.getElementById("confirmPinInput").addEventListener("keydown", e => { if (e.key === "Enter") doChangePin(); });
+      // Tap partner badge → open profile (in addition to the toggle button)
+      document.getElementById("partnerBadge").addEventListener("click", () => { if (state.partner) openProfileModal(); });
+
+      // Search
+      document.getElementById("searchInput").addEventListener("input", debounce(e => {
+        state.search = e.target.value;
+        renderList();
+      }, 200));
+
+      // Bottom bar
+      document.getElementById("submitBtn").addEventListener("click", openSubmitModal);
+      document.getElementById("bulkSubmitBtn").addEventListener("click", openBulkSubmitModal);
+      document.getElementById("exportBtn").addEventListener("click", exportCsv);
+      document.getElementById("cutoffBtn").addEventListener("click", copyNewPlates);
+
+      // Bulk action bar
+      document.getElementById("approveBtn").addEventListener("click", approveSelected);
+      document.getElementById("rejectBtn").addEventListener("click", rejectSelected);
+      document.getElementById("bulkRemoveBtn").addEventListener("click", bulkRemoveSelected);
+      document.getElementById("adminMoveBtn").addEventListener("click", adminMoveBranch);
+      document.getElementById("partnerTransferBtn").addEventListener("click", partnerRequestTransfer);
+      document.getElementById("partnerCancelTransferBtn").addEventListener("click", partnerCancelTransfer);
+
+      // Sort + partner filter
+      document.getElementById("sortSelect").addEventListener("change", e => {
+        state.sort = e.target.value; renderList();
+      });
+      document.getElementById("partnerFilterSelect").addEventListener("change", e => {
+        state.partnerFilter = e.target.value; renderList();
+      });
+
+      // Modal close buttons
+      document.querySelectorAll("[data-close]").forEach(b => {
+        b.addEventListener("click", () => closeModal(b.getAttribute("data-close")));
+      });
+      document.querySelectorAll(".modal-overlay").forEach(o => {
+        o.addEventListener("click", e => { if (e.target === o) o.classList.remove("open"); });
+      });
+
+      // Submit modal
+      document.getElementById("submitConfirmBtn").addEventListener("click", doSubmit);
+      document.getElementById("submitPlate").addEventListener("keydown", e => { if (e.key === "Enter") doSubmit(); });
+
+      // Bulk submit modal
+      document.getElementById("bulkSubmitPlates").addEventListener("input", updateBulkSummary);
+      document.getElementById("bulkSubmitConfirmBtn").addEventListener("click", doBulkSubmit);
+
+      // PIN modal
+      document.getElementById("pinConfirmBtn").addEventListener("click", confirmPin);
+      document.getElementById("pinInput").addEventListener("keydown", e => { if (e.key === "Enter") confirmPin(); });
+
+      // Edit modal
+      document.getElementById("editSaveBtn").addEventListener("click", saveEdit);
+      document.getElementById("editRemoveBtn").addEventListener("click", removeEdited);
+
+    }
+
+    // ============================================================================
+    // INIT
+    // ============================================================================
+    async function init() {
+      wire();
+      applyPartnerSession();
+      // Fire reads in parallel; also fire a ping so the next POST hits a warm script.
+      apiGet("ping").catch(() => {});
+      await Promise.all([loadPlates(), loadPartners()]);
+      // Light auto-refresh: re-pull plates every 60s while the tab is visible.
+      setInterval(() => {
+        if (document.visibilityState === "visible") loadPlates(true);
+      }, 60000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
